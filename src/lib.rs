@@ -17,7 +17,7 @@ impl<'a> Json<'a> {
 	///Parse a Json File
 	#[inline]
 	#[allow(dead_code)]
-	pub fn new<'b>( buffer: &'b str ) -> Option<Json<'b>> {
+	pub fn new( buffer: &'a str ) -> Option<Json<'a>> {
 		let mut c = CharIter::new( buffer );
 		let _ = c.skip_whitespace();
 		read_field( &mut c )
@@ -26,22 +26,22 @@ impl<'a> Json<'a> {
 	///Type Checking
 	#[inline]
 	pub fn is_var( &self ) -> bool {
-		match self {
-			&Json::Var(_) => true,
+		match *self {
+			Json::Var(_) => true,
 			_ => false
 		}
 	}
 	#[inline]
 	pub fn is_obj( &self ) -> bool {
-		match self {
-			&Json::Obj(_) => true,
+		match *self {
+			Json::Obj(_) => true,
 			_ => false
 		}
 	}
 	#[inline]
 	pub fn is_vec( &self ) -> bool {
-		match self {
-			&Json::Vec(_) => true,
+		match *self {
+			Json::Vec(_) => true,
 			_ => false
 		}
 	}
@@ -49,22 +49,22 @@ impl<'a> Json<'a> {
 	///Getting Pointer to Inner
 	#[inline]
 	pub fn get_var( &self ) -> Option<&'a str> {
-		match self {
-			&Json::Var(x) => Some( x ),
+		match *self {
+			Json::Var(x) => Some( x ),
 			_ => None
 		}
 	}
 	#[inline]
 	pub fn get_vec( &'a self ) -> Option<&'a Vec<Json<'a>>>{
-		match self {
-			&Json::Vec( ref x) => Some(x),
+		match *self {
+			Json::Vec( ref x) => Some(x),
 			_ => None
 		}
 	}
 	#[inline]
 	pub fn get_obj( &'a self ) -> Option<&'a BTreeMap<&'a str,Json<'a>>>{
-		match self {
-			&Json::Obj( ref x ) => Some(x),
+		match *self {
+			Json::Obj( ref x ) => Some(x),
 			_ => None
 		}
 	}
@@ -72,9 +72,9 @@ impl<'a> Json<'a> {
 	///Search an Object
 	#[inline]
 	pub fn search_obj( &'a self, key: &str ) -> Option<&'a Json<'a>>{
-		match self {
-			&Json::Obj( ref x ) => x.get( key ),
-			_ => return None
+		match *self {
+			Json::Obj( ref x ) => x.get( key ),
+			_ => None
 		}
 	}
 }
@@ -229,15 +229,15 @@ fn read_string<'a>( buffer: &mut CharIter<'a> ) -> Option<&'a str> {
 	let mut count = start;
 	loop {
 		match ( buffer.current(), backslash_flag ) {
-			( Option::None, _ ) => return None,
-			( Option::Some('"'), true ) => backslash_flag = false,
+			( Option::Some('"'), true ) |
+			( Option::Some('\\'), true ) => backslash_flag = false,
 			( Option::Some('"'), false ) => {
 				let rv = Some( buffer.get_sub_string( start, count) );
 				let _ = buffer.skip_whitespace();
 				return rv;
 			},
 			( Option::Some('\\'), false ) => backslash_flag = true,
-			( Option::Some('\\'), true ) => backslash_flag = false,
+			( Option::None, _ ) |
 			( Option::Some(_), true ) => return None,
 			( Option::Some(_), false ) => { }
 		};

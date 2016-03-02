@@ -8,16 +8,16 @@ pub struct CharIter<'a>{
 	iterator: Chars<'a>,
 	position: usize
 }
-impl<'a> CharIter<'a> {
 
+#[allow(dead_code)]
+impl<'a> CharIter<'a> {
 	//
 	//Constructor
 	//
 
 	///Creates a new CharIter
 	#[inline]
-	#[allow(dead_code)]
-	pub fn new<'b>( s: &'b str ) -> CharIter<'b>{
+	pub fn new( s: &'a str ) -> CharIter<'a> {
 		CharIter{
 			previous: None,
 			buffer: s,
@@ -32,31 +32,33 @@ impl<'a> CharIter<'a> {
 
 	///Returns the previous character in the buffer
 	#[inline]
-	#[allow(dead_code)]
 	pub fn current( &self ) -> Option< char > {
 		self.previous
 	}
 	///Returns the position in buffer
 	#[inline]
-	#[allow(dead_code)]
 	pub fn position( &self ) -> usize {
 		self.position - 1
 	}
 	///Returns the length of the buffer
 	#[inline]
-	#[allow(dead_code)]
 	pub fn len( &self ) -> usize {
 		self.buffer.len()
 	}
+
+	///Returns true if the buffer is empty, false otherwise
+	#[inline]
+	pub fn is_empty( &self ) -> bool {
+		self.buffer.is_empty()
+	}
+
 	///Return buffer
 	#[inline]
-	#[allow(dead_code)]
 	pub fn get_buffer( &self ) -> &'a str {
 		self.buffer
 	}
 	///Return a sub string
 	#[inline]
-	#[allow(dead_code)]
 	pub fn get_sub_string( &self, start: usize, end: usize ) -> &'a str {
 		unsafe{ self.buffer.slice_unchecked( start, end ) }
 	}
@@ -67,22 +69,20 @@ impl<'a> CharIter<'a> {
 
 	///Returns the next character in the iterator
 	#[inline]
-	#[allow(dead_code)]
 	pub fn next( &mut self ) -> Option< char > {
 		self.position += 1;
 		self.previous = self.iterator.next();
 		self.previous
 	}
+
 	///Skips white space
 	#[inline]
 	#[allow(dead_code)]
 	pub fn skip_whitespace( &mut self ) -> Option<char> {
-		loop {
-			match self.next() {
-				Option::None => return None,
-				Option::Some(x) => if x.is_whitespace() { continue } else { return Some(x) }
-			}
+		while let Some(x) = self.next() {
+			if !x.is_whitespace() { return Some(x) }
 		}
+		None
 	}
 }
 
